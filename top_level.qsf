@@ -1,0 +1,147 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 2018  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus Prime
+# Version 18.1.0 Build 625 09/12/2018 SJ Lite Edition
+# Date created = 21:17:39  February 12, 2020
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		top_level_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus Prime software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE6E22C8
+set_global_assignment -name TOP_LEVEL_ENTITY top_level
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.1.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:17:39  FEBRUARY 12, 2020"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Lite Edition"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name DEVICE_FILTER_PACKAGE "ANY QFP"
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name ENABLE_OCT_DONE OFF
+set_global_assignment -name ENABLE_CONFIGURATION_PINS OFF
+set_global_assignment -name ENABLE_BOOT_SEL_PIN OFF
+set_global_assignment -name USE_CONFIGURATION_DEVICE ON
+set_global_assignment -name CRC_ERROR_OPEN_DRAIN OFF
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
+set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_location_assignment PIN_133 -to a
+set_location_assignment PIN_132 -to b
+set_location_assignment PIN_136 -to c
+set_location_assignment PIN_144 -to b1
+set_location_assignment PIN_138 -to r1
+set_location_assignment PIN_142 -to g1
+set_location_assignment PIN_143 -to b2
+set_location_assignment PIN_137 -to r2
+set_location_assignment PIN_141 -to g2
+set_location_assignment PIN_23 -to clk_in
+set_location_assignment PIN_87 -to rst_n
+set_location_assignment PIN_129 -to lat
+set_location_assignment PIN_128 -to oe
+set_location_assignment PIN_126 -to clk_out
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to b1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to b2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to g1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to g2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to r1
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to r2
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to a
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to b
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to c
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_out
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to lat
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to oe
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_in
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to rst_n
+set_location_assignment PIN_135 -to d
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name EDA_TEST_BENCH_ENABLE_STATUS TEST_BENCH_MODE -section_id eda_simulation
+set_global_assignment -name EDA_NATIVELINK_SIMULATION_TEST_BENCH testbench -section_id eda_simulation
+set_global_assignment -name EDA_TEST_BENCH_NAME testbench -section_id eda_simulation
+set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME testbench -section_id testbench
+set_location_assignment PIN_28 -to b1_copy
+set_location_assignment PIN_31 -to g1_copy
+set_location_assignment PIN_33 -to r1_copy
+set_location_assignment PIN_32 -to g2_copy
+set_location_assignment PIN_30 -to b2_copy
+set_location_assignment PIN_34 -to r2_copy
+set_location_assignment PIN_38 -to c_copy
+set_location_assignment PIN_42 -to a_copy
+set_location_assignment PIN_39 -to d_copy
+set_location_assignment PIN_43 -to b_copy
+set_location_assignment PIN_44 -to oe_copy
+set_location_assignment PIN_46 -to lat_copy
+set_location_assignment PIN_49 -to clk_out_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to b1_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to b2_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to g1_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to g2_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to r1_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to r2_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to c_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to d_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to a_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to b_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to oe_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to lat_copy
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_out_copy
+set_global_assignment -name CYCLONEIII_CONFIGURATION_DEVICE EPCS16
+set_global_assignment -name CONFIGURATION_VCCIO_LEVEL 3.3V
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/ledctrl_tb.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/memory_tb.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/testbench.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/input_reg_tb.vhd -section_id testbench
+set_global_assignment -name VHDL_FILE vhdl/input_reg.vhd
+set_global_assignment -name VHDL_FILE vhdl/top_level.vhd
+set_global_assignment -name VHDL_FILE vhdl/memory.vhd
+set_global_assignment -name VHDL_FILE vhdl/ledctrl.vhd
+set_global_assignment -name VHDL_FILE vhdl/config.vhd
+set_global_assignment -name VHDL_FILE vhdl/clk_div.vhd
+set_location_assignment PIN_103 -to spi_clk
+set_location_assignment PIN_105 -to spi_cs
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_clk
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_cs
+set_location_assignment PIN_104 -to spi_dat
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_dat
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

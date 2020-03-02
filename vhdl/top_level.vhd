@@ -31,6 +31,11 @@ entity top_level is
     port (
         clk_in  : in std_logic;
         rst_n   : in std_logic;
+		  
+		  spi_cs  : in std_logic;
+		  spi_clk : in std_logic;
+		  spi_dat : in std_logic;
+		  
         clk_out : out std_logic;
         r1      : out std_logic;
         r2      : out std_logic;
@@ -41,8 +46,22 @@ entity top_level is
         a       : out std_logic;
         b       : out std_logic;
         c       : out std_logic;
+        d       : out std_logic;
         lat     : out std_logic;
-        oe      : out std_logic
+        oe      : out std_logic;
+        clk_out_copy : out std_logic;
+        r1_copy      : out std_logic;
+        r2_copy      : out std_logic;
+        b1_copy      : out std_logic;
+        b2_copy      : out std_logic;
+        g1_copy      : out std_logic;
+        g2_copy      : out std_logic;
+        a_copy       : out std_logic;
+        b_copy       : out std_logic;
+        c_copy       : out std_logic;
+        d_copy       : out std_logic;
+        lat_copy     : out std_logic;
+        oe_copy      : out std_logic
     );
 end top_level;
 
@@ -61,8 +80,9 @@ begin
     
     -- Reset button is an "active low" input, invert it so we can treat is as
     -- "active high", then OR it with the JTAG reset command output signal.
-    rst_p <= not rst_n;
-    rst <= rst_p or jtag_rst_out;
+    rst <= '0';
+    --rst_p <= not rst_n;
+    --rst <= rst_p or jtag_rst_out;
     
     -- LED panel controller
     U_LEDCTRL : entity work.ledctrl
@@ -77,23 +97,43 @@ begin
             rgb2(2) => r2,
             rgb2(1) => g2,
             rgb2(0) => b2,
+            led_addr(3) => d,
             led_addr(2) => c,
             led_addr(1) => b,
             led_addr(0) => a,
             lat => lat,
             oe  => oe,
+            -- Connection to LED panel
+            clk_out_copy => clk_out_copy,
+            rgb1_copy(2) => r1_copy,
+            rgb1_copy(1) => g1_copy,
+            rgb1_copy(0) => b1_copy,
+            rgb2_copy(2) => r2_copy,
+            rgb2_copy(1) => g2_copy,
+            rgb2_copy(0) => b2_copy,
+            led_addr_copy(3) => d_copy,
+            led_addr_copy(2) => c_copy,
+            led_addr_copy(1) => b_copy,
+            led_addr_copy(0) => a_copy,
+            lat_copy => lat_copy,
+            oe_copy  => oe_copy,
             -- Connection with framebuffer
             addr => addr,
             data => data_outgoing
         );
     
-    -- Virtual JTAG interface
-    U_JTAGIFACE : entity work.jtag_iface
+    -- SPI input
+    U_INPUT_REG : entity work.input_reg
         port map (
-            rst     => rst,
-            rst_out => jtag_rst_out,
-            output  => data_incoming,
-            valid   => data_valid
+				clk     => clk_in,
+				spi_cs  => spi_cs,
+				spi_clk => spi_clk,
+				spi_dat => spi_dat,
+        
+				-- Memory outputs
+				addr    => open,
+				data    => data_incoming,
+				dat_lat => data_valid
         );
     
     -- Special memory for the framebuffer
