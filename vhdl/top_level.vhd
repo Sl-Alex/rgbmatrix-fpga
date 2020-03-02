@@ -31,11 +31,11 @@ entity top_level is
     port (
         clk_in  : in std_logic;
         rst_n   : in std_logic;
-		  
-		  spi_cs  : in std_logic;
-		  spi_clk : in std_logic;
-		  spi_dat : in std_logic;
-		  
+
+        spi_cs  : in std_logic;
+        spi_clk : in std_logic;
+        spi_dat : in std_logic;
+
         clk_out : out std_logic;
         r1      : out std_logic;
         r2      : out std_logic;
@@ -125,15 +125,15 @@ begin
     -- SPI input
     U_INPUT_REG : entity work.input_reg
         port map (
-				clk     => clk_in,
-				spi_cs  => spi_cs,
-				spi_clk => spi_clk,
-				spi_dat => spi_dat,
+            -- SPI inputs
+            spi_cs  => spi_cs,
+            spi_clk => spi_clk,
+            spi_dat => spi_dat,
         
-				-- Memory outputs
-				addr    => open,
-				data    => data_incoming,
-				dat_lat => data_valid
+            -- Memory outputs
+            addr    => open,
+            data    => data_incoming,
+            dat_lat => data_valid
         );
     
     -- Special memory for the framebuffer
