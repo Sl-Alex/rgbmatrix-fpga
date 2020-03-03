@@ -38,6 +38,7 @@ package rgbmatrix is
     constant DATA_WIDTH   : positive := PIXEL_DEPTH*6;
                                          -- one bit for each subpixel (3), times
                                          -- the number of simultaneous lines (2)
+    constant INPUT_WIDTH  : positive := ((DATA_WIDTH +7)/8)*8;
     
     -- Derived constants
     constant ADDR_WIDTH     : positive := positive(log2(real(NUM_PANELS*PANEL_WIDTH*PANEL_HEIGHT/2)));

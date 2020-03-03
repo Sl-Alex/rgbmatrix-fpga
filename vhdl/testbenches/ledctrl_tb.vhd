@@ -37,7 +37,7 @@ architecture tb of ledctrl_tb is
     signal clk_in, rst, clk_out, lat, oe : std_logic;
     signal rgb1     : std_logic_vector(2 downto 0);
     signal rgb2     : std_logic_vector(2 downto 0);
-    signal led_addr : std_logic_vector(2 downto 0);
+    signal led_addr : std_logic_vector(3 downto 0);
     signal addr     : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal data     : std_logic_vector(DATA_WIDTH-1 downto 0);
 begin

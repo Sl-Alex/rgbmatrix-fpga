@@ -34,10 +34,12 @@ use work.rgbmatrix.all;
 
 entity input_reg is
     port (
+	     -- System clock
+  clk_in   : in  std_logic;
         -- SPI inputs
         spi_cs   : in  std_logic;
         spi_clk  : in  std_logic;
-        spi_dat  : in std_logic;
+        spi_dat  : in  std_logic;
         -- Memory outputs
         addr     : out std_logic_vector(ADDR_WIDTH-1 downto 0);
         data     : out std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -49,32 +51,45 @@ architecture bhv of input_reg is
     -- Signals
     signal s_bit_count : unsigned(6 downto 0);
     signal s_addr      : std_logic_vector(ADDR_WIDTH-1 downto 0);
-    signal s_data      : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal s_data      : std_logic_vector(INPUT_WIDTH-1 downto 0);
     signal s_dat_lat   : std_logic;
+    signal s_next_lat  : std_logic;
 begin
     
     -- Breakout internal signals to the output port
     addr <= s_addr;
-    data <= s_data;
-    dat_lat <= s_dat_lat;
-    
+    data <= s_data(DATA_WIDTH-1 downto 0);
+
+    -- Instantiate the Unit Under Test (UUT)
+    del : entity work.delay_line
+        generic map (
+                DELAY_LEN => 2
+            )
+        port map (
+            clk_in => clk_in,
+            rst => spi_cs,
+            data_in => s_dat_lat,
+            data_out => dat_lat
+        );
+
     -- State register
-    process(spi_cs, spi_clk, spi_dat, s_bit_count)
+    process(spi_cs, spi_clk, spi_dat, s_bit_count, s_next_lat)
     begin
         if(spi_cs = '1') then
             s_bit_count <= (others => '0');
             s_addr <= (others => '0');
             s_data <= (others => '0');
             s_dat_lat <= '0';
+            s_next_lat <= '0';
         elsif (rising_edge(spi_clk)) then
+            --s_next_lat <= '0';
             s_dat_lat <= '0';
-            s_data(DATA_WIDTH-1 downto 1) <= s_data(DATA_WIDTH-2 downto 0);
+            s_data(INPUT_WIDTH-1 downto 1) <= s_data(INPUT_WIDTH-2 downto 0);
             s_data(0) <= spi_dat;
-            --s_data(DATA_WIDTH - s_bit_count) <= spi_dat;
             s_bit_count <= s_bit_count + 1;
-            s_dat_lat <= '0';
-            if (s_bit_count = DATA_WIDTH-1) then
+            if (s_bit_count = INPUT_WIDTH - 1) then
                 s_bit_count <= (others => '0');
+--                s_next_lat <= '1';
                 s_dat_lat <= '1';
                 --s_addr <= s_addr + 1;
             end if;

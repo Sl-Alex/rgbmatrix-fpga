@@ -125,6 +125,8 @@ begin
     -- SPI input
     U_INPUT_REG : entity work.input_reg
         port map (
+		      -- System clock
+		      clk_in  => clk_in,
             -- SPI inputs
             spi_cs  => spi_cs,
             spi_clk => spi_clk,
