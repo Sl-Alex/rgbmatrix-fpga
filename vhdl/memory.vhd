@@ -36,7 +36,7 @@ entity memory is
     port (
         rst    : in  std_logic;
         clk_wr : in  std_logic;
-        input  : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+        input  : in  std_logic_vector(DATA_WIDTH/2-1 downto 0);
         clk_rd : in  std_logic;
         addr   : in  std_logic_vector(ADDR_WIDTH-1 downto 0);
         output : out std_logic_vector(DATA_WIDTH-1 downto 0)
@@ -45,11 +45,11 @@ end memory;
 
 architecture bhv of memory is
     -- Internal signals
-    signal waddr, next_waddr : std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal waddr, next_waddr : std_logic_vector(ADDR_WIDTH downto 0);
     
     -- Inferred RAM storage signal
-    type ram is array(2**ADDR_WIDTH-1 downto 0) of std_logic_vector(DATA_WIDTH-1 downto 0);
-    signal ram_block : ram;
+    type ram is array(2**ADDR_WIDTH-1 downto 0) of std_logic_vector(DATA_WIDTH/2-1 downto 0);
+    signal ram_block_up, ram_block_lo : ram;
 begin
     
     -- Create an adder to calculate the next write address
@@ -61,7 +61,11 @@ begin
         if(rst = '1') then
             waddr <= (others => '0'); -- reset the write address to the beginning
         elsif(rising_edge(clk_wr)) then
-            ram_block(conv_integer(waddr)) <= input; -- store input at the current write address
+            if (conv_integer(waddr) < 2**ADDR_WIDTH) then
+                ram_block_up(conv_integer(waddr)) <= input; -- store input at the current write address
+            else
+                ram_block_lo(conv_integer(waddr) - 2**ADDR_WIDTH) <= input; -- store input at the current write address
+            end if;
             waddr <= next_waddr; -- allow the write address to increment
         end if;
     end process;
@@ -70,7 +74,8 @@ begin
     process(clk_rd)
     begin
         if(rising_edge(clk_rd)) then
-            output <= ram_block(conv_integer(addr)); -- retrieve contents at the given read address
+            output(DATA_WIDTH-1 downto DATA_WIDTH/2) <= ram_block_up(conv_integer(addr)); -- retrieve contents at the given read address
+            output(DATA_WIDTH/2-1 downto 0) <= ram_block_lo(conv_integer(addr)); -- retrieve contents at the given read address
         end if;
     end process;
 

@@ -71,7 +71,7 @@ architecture str of top_level is
     
     -- Memory signals
     signal addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
-    signal data_incoming : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal data_incoming : std_logic_vector(DATA_WIDTH/2-1 downto 0);
     signal data_outgoing : std_logic_vector(DATA_WIDTH-1 downto 0);
     
     -- Flags

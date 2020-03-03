@@ -42,7 +42,7 @@ architecture tb of input_reg_tb is
     -- Output signals
     signal dat_lat  : std_logic;
     signal addr     : std_logic_vector(ADDR_WIDTH-1 downto 0);
-    signal data     : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal data     : std_logic_vector(DATA_WIDTH/2-1 downto 0);
 begin
     
     -- Instantiate the Unit Under Test (UUT)
