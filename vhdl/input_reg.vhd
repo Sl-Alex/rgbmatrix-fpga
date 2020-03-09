@@ -1,6 +1,7 @@
--- Simple SPI shift register for LED matrices based on FM6126A.
+-- Adafruit RGB LED Matrix Display Driver
+-- Finite state machine to control the LED matrix hardware
 -- 
--- Copyright (c) 2020 Oleksii Slabchenko <http://sl-alex.net>
+-- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>
 -- This software is distributed under the terms of the MIT License shown below.
 -- 
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,62 +35,156 @@ use work.rgbmatrix.all;
 
 entity input_reg is
     port (
-	     -- System clock
-  clk_in   : in  std_logic;
+        -- System clock
+        clk_in   : in  std_logic;
         -- SPI inputs
         spi_cs   : in  std_logic;
         spi_clk  : in  std_logic;
-        spi_dat  : in  std_logic;
+        spi_dat  : in std_logic;
+        dat_ncfg : in std_logic;
         -- Memory outputs
         addr     : out std_logic_vector(ADDR_WIDTH-1 downto 0);
         data     : out std_logic_vector(DATA_WIDTH/2-1 downto 0);
-        dat_lat  : out std_logic
+        dat_lat  : out std_logic;
+        cfg      : out std_logic_vector(CONFIG_WIDTH-1 downto 0);
+        cfg_lat  : out std_logic
         );
 end input_reg;
 
 architecture bhv of input_reg is
-    -- Signals
-    signal s_bit_count : unsigned(6 downto 0);
-    signal s_addr      : std_logic_vector(ADDR_WIDTH-1 downto 0);
-    signal s_data      : std_logic_vector(INPUT_WIDTH-1 downto 0);
-    signal s_dat_lat   : std_logic;
+    -- Essential state machine signals
+    type MODE_TYPE is (MODE_DAT, MODE_CFG);
+    signal s_mode, next_mode : MODE_TYPE := MODE_DAT;
+    
+    -- State machine signals
+    -- TODO: define proper width of the bit counter
+    signal s_bit_count, next_bit_count : unsigned(6 downto 0) := (others => '0');
+    signal s_data, next_data: std_logic_vector(DATA_WIDTH/2-1 downto 0);
+    signal s_cfg, next_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0);
+    signal s_dat_lat, next_dat_lat : std_logic;
+    signal s_cfg_lat, next_cfg_lat : std_logic;
+    signal s_addr, next_addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
+
+    signal s_dat_ncfg, s_spi_clk, s_spi_dat, s_spi_cs: std_logic;
+    signal prev_dat_ncfg, prev_spi_clk: std_logic;
 begin
     
     -- Breakout internal signals to the output port
-    addr <= s_addr;
-    data <= s_data(DATA_WIDTH/2-1 downto 0);
+    addr    <= s_addr;
+    data    <= s_data;
+    dat_lat <= s_dat_lat;
+    cfg     <= s_cfg;
+    cfg_lat <= s_cfg_lat;
 
-    -- Instantiate the Unit Under Test (UUT)
-    del : entity work.delay_line
-        generic map (
-                DELAY_LEN => 2
-            )
-        port map (
-            clk_in => clk_in,
-            rst => spi_cs,
-            data_in => s_dat_lat,
-            data_out => dat_lat
-        );
-
-    -- State register
-    process(spi_cs, spi_clk, spi_dat, s_bit_count, s_addr)
+    -- Update registers
+    process(clk_in, dat_ncfg, s_dat_ncfg, s_spi_clk, spi_clk)
     begin
-        if(spi_cs = '1') then
-            s_bit_count <= (others => '0');
-            s_addr <= (others => '0');
-            s_data <= (others => '0');
-            s_dat_lat <= '0';
-        elsif (rising_edge(spi_clk)) then
-            s_dat_lat <= '0';
-            s_data(INPUT_WIDTH-1 downto 1) <= s_data(INPUT_WIDTH-2 downto 0);
-            s_data(0) <= spi_dat;
-            s_bit_count <= s_bit_count + 1;
-            if (s_bit_count = INPUT_WIDTH - 1) then
-                s_bit_count <= (others => '0');
-                s_dat_lat <= '1';
-                --s_addr <= s_addr + 1;
-            end if;
+        if(rising_edge(clk_in)) then
+            s_dat_ncfg <= dat_ncfg;
+            prev_dat_ncfg <= s_dat_ncfg;        
+            s_spi_clk <= spi_clk;
+            prev_spi_clk <= s_spi_clk;
+            s_spi_dat <= spi_dat;
+            s_spi_cs <= spi_cs;
+            s_data <= next_data;
+            s_cfg <= next_cfg;
+            s_dat_lat <= next_dat_lat;
+            s_cfg_lat <= next_cfg_lat;
+            s_addr <= next_addr;
+            s_mode <= next_mode;
+            s_bit_count <= next_bit_count;
         end if;
     end process;
+    
+    -- Next-state logic
+    process(s_data, s_addr, s_cfg, s_bit_count, s_mode, s_dat_lat, s_cfg_lat, prev_spi_clk, s_spi_clk, s_spi_dat, s_dat_ncfg, prev_dat_ncfg, s_spi_Cs) is
+    begin
+        
+        -- Default next-state assignments
+        next_data <= s_data;
+        next_cfg  <= s_cfg;
+        next_bit_count <= s_bit_count;
+        -- Stay in the current mode by default
+        next_mode <= s_mode;
+        next_addr <= s_addr;
 
+        -- Next latche state is low by default
+        next_dat_lat <= s_dat_lat;
+        next_cfg_lat <= s_cfg_lat;
+
+        -- Modes
+        case s_mode is
+            when MODE_DAT =>
+                -- Rising edge of spi_clk
+                if prev_spi_clk = '0' and s_spi_clk = '1' then
+                    next_dat_lat <= '0'; -- latch the data
+                    next_data(0) <= s_spi_dat;
+                    next_data(DATA_WIDTH/2-1 downto 1) <= s_data(DATA_WIDTH/2-2 downto 0);
+                    next_bit_count <= s_bit_count + 1;
+                end if;
+                if prev_spi_clk = '1' and s_spi_clk = '1' then
+                    if s_bit_count = INPUT_WIDTH then
+                        next_dat_lat <= '1';
+                        next_bit_count <= (others => '0');
+                    end if;
+                end if;
+                -- Falling edge of spi_clk
+                if prev_spi_clk = '1' and s_spi_clk = '0' then
+                    if s_dat_lat = '1' then
+                        next_addr <= std_logic_vector(unsigned(s_addr) + 1);
+                        next_data <= (others => '0');
+                    end if;
+                    next_dat_lat <= '0'; -- latch the data
+                end if;
+            when MODE_CFG =>
+                -- Rising edge of spi_clk
+                if prev_spi_clk = '0' and s_spi_clk = '1' then
+                    next_cfg_lat <= '0'; -- latch the data
+                    next_cfg(0) <= s_spi_dat;
+                    next_cfg(CONFIG_WIDTH-1 downto 1) <= s_cfg(CONFIG_WIDTH-2 downto 0);
+                    next_bit_count <= s_bit_count + 1;
+                end if;
+                if prev_spi_clk = '1' and s_spi_clk = '1' then
+                    if s_bit_count = CONFIG_WIDTH then
+                        next_cfg_lat <= '1';
+                        next_bit_count <= (others => '0');
+                    end if;
+                end if;
+                -- Falling edge of spi_clk
+                if prev_spi_clk = '1' and s_spi_clk = '0' then
+                    if s_cfg_lat = '1' then
+                        next_cfg <= (others => '0');
+                    end if;
+                    next_cfg_lat <= '0'; -- latch the data
+                end if;
+        end case;
+        
+        -- Common part for all modes, overrides all above
+        if s_dat_ncfg /= prev_dat_ncfg then
+            -- Reset all counters
+            next_bit_count <= (others => '0');
+            next_addr <= (others => '0');
+            -- Reset all registers
+            next_data <= (others => '0');
+            next_cfg <= (others => '0');
+            -- Clear all latch outputs
+            next_dat_lat <= '0';
+            next_cfg_lat <= '0';
+            if (s_dat_ncfg = '1') then
+                next_mode <= MODE_DAT;
+            else
+                next_mode <= MODE_CFG;
+            end if;
+        end if;
+        
+        if s_spi_cs = '1' then
+            next_bit_count <= (others => '0');
+            next_dat_lat <= '0';
+            next_cfg_lat <= '0';
+            next_data <= (others => '0');
+            next_cfg <= (others => '0');
+        end if;
+
+    end process;
+    
 end bhv;
