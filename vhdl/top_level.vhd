@@ -71,7 +71,8 @@ architecture str of top_level is
     signal rst, rst_p, jtag_rst_out : std_logic;
     
     -- Memory signals
-    signal addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal addr_wr : std_logic_vector(ADDR_WIDTH downto 0);
+    signal addr_rd : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal data_incoming : std_logic_vector(DATA_WIDTH/2-1 downto 0);
     signal data_outgoing : std_logic_vector(DATA_WIDTH-1 downto 0);
     
@@ -119,7 +120,7 @@ begin
             lat_copy => lat_copy,
             oe_copy  => oe_copy,
             -- Connection with framebuffer
-            addr => addr,
+            addr => addr_rd,
             data => data_outgoing
         );
     
@@ -134,7 +135,7 @@ begin
             spi_dat  => spi_dat,
             dat_ncfg => dat_ncfg,
             -- Memory outputs
-            addr     => open,
+            addr     => addr_wr,
             data     => data_incoming,
             dat_lat  => data_valid,
             cfg      => open,
@@ -144,14 +145,14 @@ begin
     -- Special memory for the framebuffer
     U_MEMORY : entity work.memory
         port map (
-            rst => rst,
             -- Writing side
-            clk_wr => data_valid,
-            input  => data_incoming,
+            clk_wr  => data_valid,
+            addr_wr => addr_wr,
+            input   => data_incoming,
             -- Reading side
-            clk_rd => clk_in,
-            addr   => addr,
-            output => data_outgoing
+            clk_rd  => clk_in,
+            addr_rd => addr_rd,
+            output  => data_outgoing
         );
     
 end str;

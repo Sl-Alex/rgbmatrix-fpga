@@ -43,7 +43,7 @@ entity input_reg is
         spi_dat  : in std_logic;
         dat_ncfg : in std_logic;
         -- Memory outputs
-        addr     : out std_logic_vector(ADDR_WIDTH-1 downto 0);
+        addr     : out std_logic_vector(ADDR_WIDTH downto 0);
         data     : out std_logic_vector(DATA_WIDTH/2-1 downto 0);
         dat_lat  : out std_logic;
         cfg      : out std_logic_vector(CONFIG_WIDTH-1 downto 0);
@@ -63,7 +63,7 @@ architecture bhv of input_reg is
     signal s_cfg, next_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0);
     signal s_dat_lat, next_dat_lat : std_logic;
     signal s_cfg_lat, next_cfg_lat : std_logic;
-    signal s_addr, next_addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal s_addr, next_addr : std_logic_vector(ADDR_WIDTH downto 0);
 
     signal s_dat_ncfg, s_spi_clk, s_spi_dat, s_spi_cs: std_logic;
     signal prev_dat_ncfg, prev_spi_clk: std_logic;
@@ -80,8 +80,10 @@ begin
     process(clk_in, dat_ncfg, s_dat_ncfg, s_spi_clk, spi_clk)
     begin
         if(rising_edge(clk_in)) then
-            s_dat_ncfg <= dat_ncfg;
-            prev_dat_ncfg <= s_dat_ncfg;        
+            --s_dat_ncfg <= dat_ncfg;
+            --prev_dat_ncfg <= s_dat_ncfg;        
+            s_dat_ncfg <= '1';
+            prev_dat_ncfg <= '1';        
             s_spi_clk <= spi_clk;
             prev_spi_clk <= s_spi_clk;
             s_spi_dat <= spi_dat;
