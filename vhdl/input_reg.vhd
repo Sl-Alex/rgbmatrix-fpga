@@ -80,10 +80,8 @@ begin
     process(clk_in, dat_ncfg, s_dat_ncfg, s_spi_clk, spi_clk)
     begin
         if(rising_edge(clk_in)) then
-            --s_dat_ncfg <= dat_ncfg;
-            --prev_dat_ncfg <= s_dat_ncfg;        
-            s_dat_ncfg <= '1';
-            prev_dat_ncfg <= '1';        
+            s_dat_ncfg <= dat_ncfg;
+            prev_dat_ncfg <= s_dat_ncfg;
             s_spi_clk <= spi_clk;
             prev_spi_clk <= s_spi_clk;
             s_spi_dat <= spi_dat;
