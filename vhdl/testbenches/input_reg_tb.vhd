@@ -41,7 +41,7 @@ architecture tb of input_reg_tb is
     signal spi_dat  : std_logic;
     signal dat_ncfg : std_logic;
     -- Output signals
-    signal addr     : std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal addr     : std_logic_vector(ADDR_WIDTH downto 0);
     signal data     : std_logic_vector(DATA_WIDTH/2-1 downto 0);
     signal dat_lat  : std_logic;
     signal cfg      : std_logic_vector(CONFIG_WIDTH-1 downto 0);

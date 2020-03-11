@@ -53,7 +53,9 @@ entity ledctrl is
         oe_copy       : out std_logic;
         -- Memory IO
         addr     : out std_logic_vector(ADDR_WIDTH-1 downto 0);
-        data     : in  std_logic_vector(DATA_WIDTH-1 downto 0)
+        data     : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+        cfg      : in  std_logic_vector(CONFIG_WIDTH-1 downto 0);
+        cfg_lat  : in  std_logic
         );
 end ledctrl;
 
@@ -72,8 +74,20 @@ architecture bhv of ledctrl is
     signal s_ram_addr, next_ram_addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal s_rgb1, next_rgb1, s_rgb2, next_rgb2 : std_logic_vector(2 downto 0);
     signal s_oe, s_lat, next_lat, s_clk_out, next_clk_out : std_logic;
+    signal s_cfg, next_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0);
+    signal s_cfg_lat, s_prev_cfg_Lat: std_logic;
+
+    function linear_oe(c_cnt, b_cnt: in unsigned) return std_logic is
+    begin
+        -- Hardcoded linearization curve
+        if (c_cnt < (126 - (b_cnt**2)/2)) then
+            return '1';
+        end if;
+        return '0';
+    end function linear_oe;
+
 begin
-    
+
     -- A simple clock divider is used here to slow down this part of the circuit
     U_CLKDIV : entity work.clk_div
         generic map (
@@ -102,6 +116,13 @@ begin
     lat_copy <= s_lat;
     clk_out_copy <= s_clk_out;
 
+    process(cfg_lat)
+    begin
+        if(rising_edge(cfg_lat)) then
+            s_cfg <= cfg;
+        end if;
+    end process;
+
     -- State register
     process(rst, clk)
     begin
@@ -121,29 +142,31 @@ begin
             s_ram_addr <= next_ram_addr;
             s_rgb1 <= next_rgb1;
             s_rgb2 <= next_rgb2;
-				s_clk_out <= next_clk_out;
-				s_lat <= next_lat;
+            s_clk_out <= next_clk_out;
+            s_lat <= next_lat;
         end if;
     end process;
     
     -- Next-state logic
-    process(state, col_count, bpp_count, s_led_addr, s_ram_addr, s_rgb1, s_rgb2, data) is
+    process(state, col_count, bpp_count, s_led_addr, s_ram_addr, s_rgb1, s_rgb2, data, s_cfg) is
         -- Internal breakouts
         variable upper, lower : unsigned(DATA_WIDTH/2-1 downto 0);
         variable upper_r, upper_g, upper_b : unsigned(PIXEL_DEPTH-1 downto 0);
         variable lower_r, lower_g, lower_b : unsigned(PIXEL_DEPTH-1 downto 0);
         variable r1, g1, b1, r2, g2, b2 : std_logic;
-		  variable c_cfg1 : std_logic_vector(15 downto 0);
+        variable c_cfg1 : std_logic_vector(15 downto 0);
         variable c_cfg2 : std_logic_vector(15 downto 0);
     begin
         
         r1 := '0'; g1 := '0'; b1 := '0'; -- Defaults
         r2 := '0'; g2 := '0'; b2 := '0'; -- Defaults
-		  
-		  c_cfg1 := "0111000000000000";
+
+        next_cfg <= s_cfg;
+        --c_cfg1 := s_cfg(CONFIG_WIDTH-1 downto CONFIG_WIDTH/2);
+        --c_cfg2 := s_cfg(CONFIG_WIDTH/2-1 downto 0);
+        c_cfg1 := "0111000000000000";
         c_cfg2 := "0000000001000000";
-		  --c_cfg2 := "0000000000000000";
-        
+
         -- Default register next-state assignments
         next_col_count <= col_count;
         next_bpp_count <= bpp_count;
@@ -157,41 +180,42 @@ begin
         next_lat <= '0';
         s_oe <= '1'; -- this signal is "active low"
 
-		 if(upper_r > bpp_count) then
-			  r1 := '1';
-		 end if;
-		 if(upper_g > bpp_count) then
-			  g1 := '1';
-		 end if;
-		 if(upper_b > bpp_count) then
-			  b1 := '1';
-		 end if;
-		 if(lower_r > bpp_count) then
-			  r2 := '1';
-		 end if;
-		 if(lower_g > bpp_count) then
-			  g2 := '1';
-		 end if;
-		 if(lower_b > bpp_count) then
-			  b2 := '1';
-		 end if;
+        if(upper_r > bpp_count) then
+            r1 := '1';
+        end if;
+        if(upper_g > bpp_count) then
+            g1 := '1';
+        end if;
+        if(upper_b > bpp_count) then
+            b1 := '1';
+        end if;
+        if(lower_r > bpp_count) then
+            r2 := '1';
+        end if;
+        if(lower_g > bpp_count) then
+            g2 := '1';
+        end if;
+        if(lower_b > bpp_count) then
+            b2 := '1';
+        end if;
 
-			 -- States
+        -- States
         case state is
             when INIT =>
-					 r1 := '0'; g1:= '0'; b1:= '0';
-					 r2 := '0'; g2:= '0'; b2:= '0';
+                r1 := '0'; g1:= '0'; b1:= '0';
+                r2 := '0'; g2:= '0'; b2:= '0';
                 next_state <= READ_PIXEL_DATA;
                 if(s_led_addr = "1111") then
                     if(bpp_count = unsigned(to_signed(-2, PIXEL_DEPTH))) then
                         next_bpp_count <= (others => '0');
-								next_state <= WRITE_CFG1;
+                        next_state <= WRITE_CFG1;
                     else
                         next_bpp_count <= bpp_count + 1;
                     end if;
                 end if;
             when READ_PIXEL_DATA =>
-                s_oe <= '0'; -- enable display
+                s_oe <= linear_oe(col_count, next_bpp_count);
+                --s_oe <= '0'; -- enable display
                 -- Do parallel comparisons against BPP counter to gain multibit color
                 next_col_count <= col_count + 1; -- update/increment column counter
                 if(col_count < IMG_WIDTH) then -- check if at the rightmost side of the image
@@ -200,8 +224,9 @@ begin
                     next_state <= INCR_LED_ADDR;
                 end if;
             when INCR_RAM_ADDR =>
+                s_oe <= linear_oe(col_count, next_bpp_count);
                 next_clk_out <= '1'; -- pulse the output clock
-                s_oe <= '0'; -- enable display
+                --s_oe <= '0'; -- enable display
                 next_ram_addr <= std_logic_vector( unsigned(s_ram_addr) + 1 );
                 next_state <= READ_PIXEL_DATA;
             when INCR_LED_ADDR =>
@@ -212,106 +237,103 @@ begin
             when LATCH =>
                 -- display is disabled during latching
                 next_lat <= '1'; -- latch the data
-					 r1 := '0'; g1:= '0'; b1:= '0';
-					 r2 := '0'; g2:= '0'; b2:= '0';
+                r1 := '0'; g1:= '0'; b1:= '0';
+                r2 := '0'; g2:= '0'; b2:= '0';
                 next_state <= INIT; -- restart state machine
             when WRITE_CFG1 =>
                 next_clk_out <= '1'; -- pulse the output clock
-					 if(col_count >= (IMG_WIDTH - CFG1_PRELATCH)) then -- check if at the rightmost side of the image
-						  next_lat <= '1'; -- latch the data
-					 end if;
+                if(col_count >= (IMG_WIDTH - CFG1_PRELATCH)) then -- check if at the rightmost side of the image
+                    next_lat <= '1'; -- latch the data
+                end if;
                 if(col_count < IMG_WIDTH) then -- check if at the rightmost side of the image
                     next_state <= LATCH_CFG1;
-						  next_col_count <= col_count + 1; -- update/increment column counter
+                    next_col_count <= col_count + 1; -- update/increment column counter
                 else
                     next_col_count <= (others => '0'); -- update/increment column counter
                     next_state <= WRITE_CFG2;
-  						  next_clk_out <= '0';
-						  next_lat <= '0';
+                    next_clk_out <= '0';
+                    next_lat <= '0';
                 end if;
-						  r1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  g1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  b1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  r2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  g2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  b2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                r1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                g1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                b1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                r2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                g2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                b2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
             when LATCH_CFG1 =>
                 -- display is disabled during latching
                 next_clk_out <= '0'; -- pulse the output clock
                 next_state <= WRITE_CFG1; -- restart state machine
-					 if(col_count >= (IMG_WIDTH - CFG1_PRELATCH)) then -- check if at the rightmost side of the image
-						  next_lat <= '1'; -- latch the data
-					 end if;
-						  r1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  g1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  b1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  r2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  g2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
-						  b2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                if(col_count >= (IMG_WIDTH - CFG1_PRELATCH)) then -- check if at the rightmost side of the image
+                    next_lat <= '1'; -- latch the data
+                end if;
+                r1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                g1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                b1 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                r2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                g2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
+                b2 := c_cfg1(15 - to_integer(col_count(3 downto 0)));
             when WRITE_CFG2 =>
                 next_clk_out <= '1'; -- pulse the output clock
-					 if(col_count >= (IMG_WIDTH - CFG2_PRELATCH)) then -- check if at the rightmost side of the image
-						  next_lat <= '1'; -- latch the data
-					 end if;
+                if(col_count >= (IMG_WIDTH - CFG2_PRELATCH)) then -- check if at the rightmost side of the image
+                    next_lat <= '1'; -- latch the data
+                end if;
                 if(col_count < IMG_WIDTH) then -- check if at the rightmost side of the image
                     next_state <= LATCH_CFG2;
-						  next_col_count <= col_count + 1; -- update/increment column counter
+                    next_col_count <= col_count + 1; -- update/increment column counter
                 else
                     next_col_count <= (others => '0'); -- update/increment column counter
                     next_state <= WRITE_EMPTY;
-						  next_clk_out <= '0';
-						  next_lat <= '0';
+                    next_clk_out <= '0';
+                    next_lat <= '0';
                 end if;
-						  r1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  g1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  b1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  r2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  g2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  b2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                r1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                g1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                b1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                r2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                g2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                b2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
             when LATCH_CFG2 =>
                 next_clk_out <= '0'; -- pulse the output clock
                 next_state <= WRITE_CFG2; -- restart state machine
-					 if(col_count >= (IMG_WIDTH - CFG2_PRELATCH)) then -- check if at the rightmost side of the image
-						  next_lat <= '1'; -- latch the data
-					 end if;
-						  r1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  g1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  b1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  r2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  g2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
-						  b2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                if(col_count >= (IMG_WIDTH - CFG2_PRELATCH)) then -- check if at the rightmost side of the image
+                    next_lat <= '1'; -- latch the data
+                end if;
+                r1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                g1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                b1 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                r2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                g2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
+                b2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
             when WRITE_EMPTY =>
-					 if(col_count >= (IMG_WIDTH - 3)) then -- check if at the rightmost side of the image
-						  next_lat <= '1'; -- latch the data
-					 end if;                next_clk_out <= '1'; -- pulse the output clock
-						  r1 := '0';
-						  g1 := '0';
-						  b1 := '0';
-						  r2 := '0';
-						  g2 := '0';
-						  b2 := '0';
+                if(col_count >= (IMG_WIDTH - 3)) then -- check if at the rightmost side of the image
+                    next_lat <= '1'; -- latch the data
+                end if;                next_clk_out <= '1'; -- pulse the output clock
+                r1 := '0';
+                g1 := '0';
+                b1 := '0';
+                r2 := '0';
+                g2 := '0';
+                b2 := '0';
                 if(col_count < IMG_WIDTH) then -- check if at the rightmost side of the image
                     next_state <= LATCH_EMPTY;
-						  next_col_count <= col_count + 1; -- update/increment column counter
+                    next_col_count <= col_count + 1; -- update/increment column counter
                 else
                     next_col_count <= (others => '0'); -- update/increment column counter
                     next_state <= READ_PIXEL_DATA;
-						  next_ram_addr <= (others => '0');
-						  next_clk_out <= '0';
-						  --next_lat <= '1';
-						  --next_led_addr <= (others => '0'); -- reset the column counter
+                    next_ram_addr <= (others => '0');
+                    next_clk_out <= '0';
                 end if;
             when LATCH_EMPTY =>
-						  r1 := '0';
-						  g1 := '0';
-						  b1 := '0';
-						  r2 := '0';
-						  g2 := '0';
-						  b2 := '0';
-					 if(col_count >= (IMG_WIDTH - 3)) then -- check if at the rightmost side of the image
-						  next_lat <= '1'; -- latch the data
-					 end if;
-					 --next_lat <= '1';
+                r1 := '0';
+                g1 := '0';
+                b1 := '0';
+                r2 := '0';
+                g2 := '0';
+                b2 := '0';
+                if(col_count >= (IMG_WIDTH - 3)) then -- check if at the rightmost side of the image
+                    next_lat <= '1'; -- latch the data
+                end if;
                 next_clk_out <= '0'; -- pulse the output clock
                 next_state <= WRITE_EMPTY; -- restart state machine
             when others => null;

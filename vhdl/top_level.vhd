@@ -75,9 +75,11 @@ architecture str of top_level is
     signal addr_rd : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal data_incoming : std_logic_vector(DATA_WIDTH/2-1 downto 0);
     signal data_outgoing : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal cfg_incoming : std_logic_vector(CONFIG_WIDTH-1 downto 0);
     
     -- Flags
     signal data_valid : std_logic;
+    signal cfg_valid : std_logic;
 begin
     
     -- Reset button is an "active low" input, invert it so we can treat is as
@@ -121,7 +123,9 @@ begin
             oe_copy  => oe_copy,
             -- Connection with framebuffer
             addr => addr_rd,
-            data => data_outgoing
+            data => data_outgoing,
+            cfg => cfg_incoming, --"01110000000000000000000001000000",
+            cfg_lat => cfg_valid
         );
     
     -- SPI input
@@ -138,8 +142,8 @@ begin
             addr     => addr_wr,
             data     => data_incoming,
             dat_lat  => data_valid,
-            cfg      => open,
-            cfg_lat  => open
+            cfg      => cfg_incoming,
+            cfg_lat  => cfg_valid
         );
     
     -- Special memory for the framebuffer
