@@ -80,7 +80,7 @@ architecture bhv of ledctrl is
     function linear_oe(c_cnt, b_cnt: in unsigned) return std_logic is
     begin
         -- Hardcoded linearization curve
-        if (c_cnt < (126 - (b_cnt**2)/2)) then
+        if (c_cnt < (126 - (b_cnt*b_cnt)/2)) then
             return '1';
         end if;
         return '0';
