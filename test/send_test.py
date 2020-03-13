@@ -10,14 +10,11 @@
 
 import time
 from pyftdi.spi import SpiController
-from PIL import Image
-from glob import glob
+import startup
 
-# Display size
-DISP_W = 128
-DISP_H = 32
-# Bytes per pixel
-BPP    = 2
+startup.init()
+
+import config
 
 # FTDI controller
 FTDI_URL = 'ftdi://ftdi:4232:FTYX7ASG/1'
@@ -31,6 +28,7 @@ def initialize():
 
     #ctrl.configure('ftdi:///?')  # Use this if you're not sure which device to use
     # Windows users: make sure you've loaded libusb-win32 using Zadig
+    # TODO: Catch an exception and suggest what to do
     ctrl.configure(FTDI_URL)
 
     # Get SPI slave
@@ -42,28 +40,26 @@ def initialize():
     gpio.set_direction(0x10, 0x10)
 
 
-def send_image(fname):
+def send_image():
     global gpio
     global spi
 
     # Create a buffer
-    write_buf = bytearray(DISP_W*DISP_H*BPP)
+    write_buf = bytearray(config.DISP_W*config.DISP_H*config.BPP)
 
-    # Import an image
-    im = Image.open(fname)
-    im = im.convert('RGB')
-
-    # Put it to the write buffer
-    for y in range(0, DISP_H):
-        for x in range(0, DISP_W):
-            r, g, b = im.getpixel((x, y))
+    for y in range(0, config.DISP_H):
+        r=0;g=0;b=0;
+        for x in range(0, config.DISP_W):
             # Convert to 4-bit color
-            r = int(r*16/256);
-            g = int(g*16/256);
-            b = int(b*16/256);
+            if (int(x/16)%3)==0:
+                r=x%16;g=0;b=0;
+            if (int(x/16)%3)==1:
+                r=0;g=x%16;b=0;
+            if (int(x/16)%3)==2:
+                r=0;g=0;b=x%16;
             # Write two bytes
-            write_buf[x*2 + y*DISP_W*2]     = r;
-            write_buf[x*2 + y*DISP_W*2 + 1] = (g << 4) | b;
+            write_buf[x*2 + y*config.DISP_W*2]     = r;
+            write_buf[x*2 + y*config.DISP_W*2 + 1] = (g << 4) | b;
 
     # Toggle dat_ncfg pin. This will force internal address counter to zero.
     gpio.write(0x10)
@@ -78,10 +74,8 @@ def send_image(fname):
 
 ###
 
+startup.init()
 initialize()
-files=glob('*.gif')+glob('*.png')+glob('*.jpg')
-for file in files:
-    send_image(file)
-    time.sleep(1)
+send_image()
 
 print('Done')
