@@ -68,7 +68,7 @@ end top_level;
 
 architecture str of top_level is
     -- Reset signals
-    signal rst, rst_p, jtag_rst_out : std_logic;
+    signal rst : std_logic;
     
     -- Memory signals
     signal addr_wr : std_logic_vector(ADDR_WIDTH downto 0);

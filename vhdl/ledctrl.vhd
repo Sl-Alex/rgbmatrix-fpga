@@ -69,8 +69,8 @@ architecture bhv of ledctrl is
     
     -- State machine signals
     signal col_count, next_col_count : unsigned(IMG_WIDTH_LOG2 downto 0);
-    signal bpp_count, next_bpp_count : unsigned(PIXEL_DEPTH-1 downto 0);
-    signal s_led_addr, next_led_addr : std_logic_vector(3 downto 0);
+    signal bpp_count, next_bpp_count, prev_bpp_count, s_prev_bpp_count : unsigned(PIXEL_DEPTH-1 downto 0);
+    signal s_led_addr, next_led_addr : std_logic_vector(3 downto 0) := "1111";
     signal s_ram_addr, next_ram_addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal s_rgb1, next_rgb1, s_rgb2, next_rgb2 : std_logic_vector(2 downto 0);
     signal s_oe, s_lat, next_lat, s_clk_out, next_clk_out : std_logic;
@@ -80,10 +80,11 @@ architecture bhv of ledctrl is
     function linear_oe(c_cnt, b_cnt: in unsigned) return std_logic is
     begin
         -- Hardcoded linearization curve
-        if (c_cnt < (126 - (b_cnt*b_cnt)/2)) then
+        if (c_cnt < PANEL_WIDTH - 1 - COLOR_LUT(to_integer(b_cnt))) then
             return '1';
-        end if;
-        return '0';
+        else
+            return '0';
+        end if; 
     end function linear_oe;
 
 begin
@@ -140,6 +141,7 @@ begin
             bpp_count <= next_bpp_count;
             s_led_addr <= next_led_addr;
             s_ram_addr <= next_ram_addr;
+            s_prev_bpp_count <= prev_bpp_count;
             s_rgb1 <= next_rgb1;
             s_rgb2 <= next_rgb2;
             s_clk_out <= next_clk_out;
@@ -148,7 +150,7 @@ begin
     end process;
     
     -- Next-state logic
-    process(state, col_count, bpp_count, s_led_addr, s_ram_addr, s_rgb1, s_rgb2, data, s_cfg) is
+    process(state, col_count, bpp_count, s_led_addr, s_ram_addr, s_rgb1, s_rgb2, data, s_cfg, next_bpp_count, prev_bpp_count, s_prev_bpp_count) is
         -- Internal breakouts
         variable upper, lower : unsigned(DATA_WIDTH/2-1 downto 0);
         variable upper_r, upper_g, upper_b : unsigned(PIXEL_DEPTH-1 downto 0);
@@ -174,6 +176,7 @@ begin
         next_ram_addr <= s_ram_addr;
         next_rgb1 <= s_rgb1;
         next_rgb2 <= s_rgb2;
+        prev_bpp_count <= s_prev_bpp_count;
         
         -- Default signal assignments
         next_clk_out <= '0';
@@ -214,8 +217,7 @@ begin
                     end if;
                 end if;
             when READ_PIXEL_DATA =>
-                s_oe <= linear_oe(col_count, next_bpp_count);
-                --s_oe <= '0'; -- enable display
+                s_oe <= linear_oe(col_count, prev_bpp_count);
                 -- Do parallel comparisons against BPP counter to gain multibit color
                 next_col_count <= col_count + 1; -- update/increment column counter
                 if(col_count < IMG_WIDTH) then -- check if at the rightmost side of the image
@@ -224,15 +226,15 @@ begin
                     next_state <= INCR_LED_ADDR;
                 end if;
             when INCR_RAM_ADDR =>
-                s_oe <= linear_oe(col_count, next_bpp_count);
+                s_oe <= linear_oe(col_count, prev_bpp_count);
                 next_clk_out <= '1'; -- pulse the output clock
-                --s_oe <= '0'; -- enable display
                 next_ram_addr <= std_logic_vector( unsigned(s_ram_addr) + 1 );
                 next_state <= READ_PIXEL_DATA;
             when INCR_LED_ADDR =>
                 -- display is disabled during led_addr (select lines) update
                 next_led_addr <= std_logic_vector( unsigned(s_led_addr) + 1 );
                 next_col_count <= (others => '0'); -- reset the column counter
+                prev_bpp_count <= next_bpp_count;
                 next_state <= LATCH;
             when LATCH =>
                 -- display is disabled during latching
@@ -306,8 +308,8 @@ begin
                 g2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
                 b2 := c_cfg2(15 - to_integer(col_count(3 downto 0)));
             when WRITE_EMPTY =>
-                if(col_count >= (IMG_WIDTH - 3)) then -- check if at the rightmost side of the image
-                    next_lat <= '1'; -- latch the data
+                if(col_count >= (IMG_WIDTH - 2)) then -- check if at the rightmost side of the image
+                --    next_lat <= '1'; -- latch the data
                 end if;                next_clk_out <= '1'; -- pulse the output clock
                 r1 := '0';
                 g1 := '0';
@@ -323,6 +325,7 @@ begin
                     next_state <= READ_PIXEL_DATA;
                     next_ram_addr <= (others => '0');
                     next_clk_out <= '0';
+                    next_lat <= '1'; -- latch the data
                 end if;
             when LATCH_EMPTY =>
                 r1 := '0';
@@ -331,9 +334,9 @@ begin
                 r2 := '0';
                 g2 := '0';
                 b2 := '0';
-                if(col_count >= (IMG_WIDTH - 3)) then -- check if at the rightmost side of the image
-                    next_lat <= '1'; -- latch the data
-                end if;
+                --if(col_count >= (IMG_WIDTH - 2)) then -- check if at the rightmost side of the image
+                --    next_lat <= '1'; -- latch the data
+                --end if;
                 next_clk_out <= '0'; -- pulse the output clock
                 next_state <= WRITE_EMPTY; -- restart state machine
             when others => null;
