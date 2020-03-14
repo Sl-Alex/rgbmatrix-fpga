@@ -52,13 +52,16 @@ def send(im):
     for y in range(0, config.DISP_H):
         for x in range(0, config.DISP_W):
             r, g, b = im.getpixel((x, y))
-            # Convert to 4-bit color
-            r = int(r*16/256);
-            g = int(g*16/256);
-            b = int(b*16/256);
-            # Write two bytes
-            write_buf[x*2 + y*config.DISP_W*2]     = r;
-            write_buf[x*2 + y*config.DISP_W*2 + 1] = (g << 4) | b;
+            # Convert to the desired bits-per-color
+            r = int(r*(2**config.BPC)/256)
+            g = int(g*(2**config.BPC)/256)
+            b = int(b*(2**config.BPC)/256)
+            # Pack into a single word
+            packed_word: int = (r << (config.BPC*2)) | (g << config.BPC) | b
+            # Write bytes to the array
+            for byte_nr in range(0, config.BPP):
+                write_buf[x*config.BPP + y*config.DISP_W*config.BPP + byte_nr] = \
+                    (packed_word >> (8 * (config.BPP - 1 - byte_nr))) & 0xFF
 
     # Toggle dat_ncfg pin. This will force internal address counter to zero.
     gpio.write(0x10)

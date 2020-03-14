@@ -30,6 +30,8 @@ package rgbmatrix is
     
     -- User configurable constants
     constant PIXEL_DEPTH  : integer := 4; -- number of bits per pixel
+    constant FPGA_CLOCK   : integer := 50000000; -- FPGA clock frequency
+    constant LED_CLOCK    : integer := 12500000; -- LED panel clock frequency
     
     -- Special constants (change these at your own risk, stuff might break!)
     constant PANEL_WIDTH  : integer := 128; -- width of the panel in pixels

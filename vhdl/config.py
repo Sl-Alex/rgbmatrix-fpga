@@ -10,6 +10,13 @@
 #end if;
 #
 
+import math
+
+# FPGA clock
+FPGA_CLOCK = 50000000
+# LED matrix clock
+LED_CLOCK  = 12500000
+
 # Display width
 DISP_W = 128
 DISP_H = 32
@@ -17,6 +24,12 @@ DISP_H = 32
 BPC = 4
 # Desired gamma
 GAMMA = 1.02
+
+
+assert BPC <= 8, "BPC must be <= 8"
+assert BPC >  0, "BPC must be > 0"
+
+BPP = math.ceil(BPC * 3/8)
 
 def generate_config_vhd():
     lut_table = '';
@@ -66,6 +79,8 @@ def generate_config_vhd():
     '    \n'\
     '    -- User configurable constants\n'\
     '    constant PIXEL_DEPTH  : integer := ' + str(BPC) + '; -- number of bits per pixel\n'\
+    '    constant FPGA_CLOCK   : integer := ' + str(FPGA_CLOCK) + '; -- FPGA clock frequency\n'\
+    '    constant LED_CLOCK    : integer := ' + str(LED_CLOCK) + '; -- LED panel clock frequency\n'\
     '    \n'\
     '    -- Special constants (change these at your own risk, stuff might break!)\n'\
     '    constant PANEL_WIDTH  : integer := ' + str(DISP_W) + '; -- width of the panel in pixels\n'\
