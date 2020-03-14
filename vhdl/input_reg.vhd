@@ -47,7 +47,9 @@ entity input_reg is
         data     : out std_logic_vector(DATA_WIDTH/2-1 downto 0);
         dat_lat  : out std_logic;
         cfg      : out std_logic_vector(CONFIG_WIDTH-1 downto 0);
-        cfg_lat  : out std_logic
+        cfg_lat  : out std_logic;
+        -- status_frame
+        status_frame : out std_logic
         );
 end input_reg;
 
@@ -67,6 +69,7 @@ architecture bhv of input_reg is
 
     signal s_dat_ncfg, s_spi_clk, s_spi_dat, s_spi_cs: std_logic;
     signal prev_dat_ncfg, prev_spi_clk: std_logic;
+    signal s_frame, next_frame: std_logic;
 begin
     
     -- Breakout internal signals to the output port
@@ -75,6 +78,7 @@ begin
     dat_lat <= s_dat_lat;
     cfg     <= s_cfg;
     cfg_lat <= s_cfg_lat;
+    status_frame <= s_frame;
 
     -- Update registers
     process(clk_in, dat_ncfg, s_dat_ncfg, s_spi_clk, spi_clk)
@@ -93,11 +97,12 @@ begin
             s_addr <= next_addr;
             s_mode <= next_mode;
             s_bit_count <= next_bit_count;
+            s_frame <= next_frame;
         end if;
     end process;
     
     -- Next-state logic
-    process(s_data, s_addr, s_cfg, s_bit_count, s_mode, s_dat_lat, s_cfg_lat, prev_spi_clk, s_spi_clk, s_spi_dat, s_dat_ncfg, prev_dat_ncfg, s_spi_Cs) is
+    process(s_data, s_addr, s_cfg, s_bit_count, s_mode, s_dat_lat, s_cfg_lat, prev_spi_clk, s_spi_clk, s_spi_dat, s_dat_ncfg, prev_dat_ncfg, s_spi_cs, s_frame) is
     begin
         
         -- Default next-state assignments
@@ -107,6 +112,8 @@ begin
         -- Stay in the current mode by default
         next_mode <= s_mode;
         next_addr <= s_addr;
+
+        next_frame <= s_frame;
 
         -- Next latche state is low by default
         next_dat_lat <= s_dat_lat;
@@ -132,6 +139,9 @@ begin
                 if prev_spi_clk = '1' and s_spi_clk = '0' then
                     if s_dat_lat = '1' then
                         next_addr <= std_logic_vector(unsigned(s_addr) + 1);
+                        if unsigned(s_addr) = 2**ADDR_WIDTH - 1 then
+                            next_frame <= not s_frame;
+                        end if;
                         next_data <= (others => '0');
                     end if;
                     next_dat_lat <= '0'; -- latch the data

@@ -55,7 +55,9 @@ entity ledctrl is
         addr     : out std_logic_vector(ADDR_WIDTH-1 downto 0);
         data     : in  std_logic_vector(DATA_WIDTH-1 downto 0);
         cfg      : in  std_logic_vector(CONFIG_WIDTH-1 downto 0);
-        cfg_lat  : in  std_logic
+        cfg_lat  : in  std_logic;
+        -- Status outputs
+        status_frame : out std_logic
         );
 end ledctrl;
 
@@ -76,6 +78,7 @@ architecture bhv of ledctrl is
     signal s_oe, s_lat, next_lat, s_clk_out, next_clk_out : std_logic;
     signal s_cfg, next_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0);
     signal s_cfg_lat, s_prev_cfg_Lat: std_logic;
+    signal s_frame, next_frame: std_logic;
 
     function linear_oe(c_cnt, b_cnt: in unsigned) return std_logic is
     begin
@@ -92,8 +95,8 @@ begin
     -- A simple clock divider is used here to slow down this part of the circuit
     U_CLKDIV : entity work.clk_div
         generic map (
-            clk_in_freq  => 50000000, -- 50MHz input clock
-            clk_out_freq => 12500000  -- 12.5MHz output clock
+            clk_in_freq  => FPGA_CLOCK,
+            clk_out_freq => LED_CLOCK
         )
         port map (
             rst => rst,
@@ -116,6 +119,7 @@ begin
     oe_copy <= s_oe;
     lat_copy <= s_lat;
     clk_out_copy <= s_clk_out;
+    status_frame <= s_frame;
 
     process(cfg_lat)
     begin
@@ -146,11 +150,12 @@ begin
             s_rgb2 <= next_rgb2;
             s_clk_out <= next_clk_out;
             s_lat <= next_lat;
+            s_frame <= next_frame;
         end if;
     end process;
     
     -- Next-state logic
-    process(state, col_count, bpp_count, s_led_addr, s_ram_addr, s_rgb1, s_rgb2, data, s_cfg, next_bpp_count, prev_bpp_count, s_prev_bpp_count) is
+    process(state, col_count, bpp_count, s_led_addr, s_ram_addr, s_rgb1, s_rgb2, data, s_cfg, next_bpp_count, prev_bpp_count, s_prev_bpp_count, s_frame) is
         -- Internal breakouts
         variable upper, lower : unsigned(DATA_WIDTH/2-1 downto 0);
         variable upper_r, upper_g, upper_b : unsigned(PIXEL_DEPTH-1 downto 0);
@@ -182,6 +187,7 @@ begin
         next_clk_out <= '0';
         next_lat <= '0';
         s_oe <= '1'; -- this signal is "active low"
+        next_frame <= s_frame;
 
         if(upper_r > bpp_count) then
             r1 := '1';
@@ -212,6 +218,7 @@ begin
                     if(bpp_count = unsigned(to_signed(-2, PIXEL_DEPTH))) then
                         next_bpp_count <= (others => '0');
                         next_state <= WRITE_CFG1;
+                        next_frame <= not s_frame;
                     else
                         next_bpp_count <= bpp_count + 1;
                     end if;

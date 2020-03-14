@@ -29,14 +29,15 @@ use work.rgbmatrix.all; -- Constants & Configuration
 
 entity top_level is
     port (
+        -- Clock and reset inputs
         clk_in  : in std_logic;
         rst_n   : in std_logic;
-
+        -- SPI inputs
         spi_cs  : in std_logic;
         spi_clk : in std_logic;
         spi_dat : in std_logic;
-        dat_ncfg : in std_logic;
-
+        dat_ncfg : in std_logic; -- Write 1->0->1 for data, 0->1->0 for configuration
+        -- LED matrix outputs
         clk_out : out std_logic;
         r1      : out std_logic;
         r2      : out std_logic;
@@ -50,6 +51,7 @@ entity top_level is
         d       : out std_logic;
         lat     : out std_logic;
         oe      : out std_logic;
+        -- Debug copy of LED matrix outputs
         clk_out_copy : out std_logic;
         r1_copy      : out std_logic;
         r2_copy      : out std_logic;
@@ -62,7 +64,10 @@ entity top_level is
         c_copy       : out std_logic;
         d_copy       : out std_logic;
         lat_copy     : out std_logic;
-        oe_copy      : out std_logic
+        oe_copy      : out std_logic;
+        -- Status LEDs
+        led_frame_out : out std_logic;
+        led_frame_in  : out std_logic
     );
 end top_level;
 
@@ -80,6 +85,7 @@ architecture str of top_level is
     -- Flags
     signal data_valid : std_logic;
     signal cfg_valid : std_logic;
+    signal status_frame : std_logic;
 begin
     
     -- Reset button is an "active low" input, invert it so we can treat is as
@@ -125,7 +131,8 @@ begin
             addr => addr_rd,
             data => data_outgoing,
             cfg => cfg_incoming, --"01110000000000000000000001000000",
-            cfg_lat => cfg_valid
+            cfg_lat => cfg_valid,
+            status_frame => led_frame_out
         );
     
     -- SPI input
@@ -143,7 +150,8 @@ begin
             data     => data_incoming,
             dat_lat  => data_valid,
             cfg      => cfg_incoming,
-            cfg_lat  => cfg_valid
+            cfg_lat  => cfg_valid,
+            status_frame => led_frame_in
         );
     
     -- Special memory for the framebuffer
