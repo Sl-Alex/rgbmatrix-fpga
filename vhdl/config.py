@@ -17,6 +17,11 @@ FPGA_CLOCK = 50000000
 # LED matrix clock
 LED_CLOCK  = 12500000
 
+# Reset delay, ms
+RESET_DELAY = 1000
+# Reset length, ms
+RESET_LEN   = 100
+
 # Display width
 DISP_W = 128
 DISP_H = 32
@@ -25,9 +30,13 @@ BPC = 4
 # Desired gamma
 GAMMA = 1.02
 
-
 assert BPC <= 8, "BPC must be <= 8"
 assert BPC >  0, "BPC must be > 0"
+
+# Convert ms to clock pulses
+RESET_DELAY = int(FPGA_CLOCK * RESET_DELAY / 1000)
+# Convert ms to clock pulses
+RESET_LEN = int(FPGA_CLOCK * RESET_LEN / 1000)
 
 BPP = math.ceil(BPC * 3/8)
 
@@ -81,6 +90,8 @@ def generate_config_vhd():
     '    constant PIXEL_DEPTH  : integer := ' + str(BPC) + '; -- number of bits per pixel\n'\
     '    constant FPGA_CLOCK   : integer := ' + str(FPGA_CLOCK) + '; -- FPGA clock frequency\n'\
     '    constant LED_CLOCK    : integer := ' + str(LED_CLOCK) + '; -- LED panel clock frequency\n'\
+    '    constant RESET_DELAY  : integer := ' + str(RESET_DELAY) + '; -- reset pulse delay, clock pulses\n'\
+    '    constant RESET_LEN    : integer := ' + str(RESET_LEN) + '; -- reset pulse length, clock pulses\n'\
     '    \n'\
     '    -- Special constants (change these at your own risk, stuff might break!)\n'\
     '    constant PANEL_WIDTH  : integer := ' + str(DISP_W) + '; -- width of the panel in pixels\n'\
@@ -99,7 +110,7 @@ def generate_config_vhd():
     '    constant CFG1_PRELATCH  : positive := 11;\n'\
     '    constant CFG2_PRELATCH  : positive := 12;\n'\
     '\n'\
-    '    type color_lut_t is array (0 to 2**PIXEL_DEPTH-1) of positive;\n' + \
+    '    type color_lut_t is array (0 to 2**PIXEL_DEPTH-1) of integer;\n' + \
     lut_table + \
     '\n'\
     'end rgbmatrix;'

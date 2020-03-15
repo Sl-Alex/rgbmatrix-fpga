@@ -32,6 +32,8 @@ package rgbmatrix is
     constant PIXEL_DEPTH  : integer := 4; -- number of bits per pixel
     constant FPGA_CLOCK   : integer := 50000000; -- FPGA clock frequency
     constant LED_CLOCK    : integer := 12500000; -- LED panel clock frequency
+    constant RESET_DELAY  : integer := 50000000; -- reset pulse delay, clock pulses
+    constant RESET_LEN    : integer := 500000; -- reset pulse length, clock pulses
     
     -- Special constants (change these at your own risk, stuff might break!)
     constant PANEL_WIDTH  : integer := 128; -- width of the panel in pixels
@@ -50,7 +52,7 @@ package rgbmatrix is
     constant CFG1_PRELATCH  : positive := 11;
     constant CFG2_PRELATCH  : positive := 12;
 
-    type color_lut_t is array (0 to 2**PIXEL_DEPTH-1) of positive;
+    type color_lut_t is array (0 to 2**PIXEL_DEPTH-1) of integer;
     constant COLOR_LUT: color_lut_t := (0,1,2,5,9,14,20,27,35,45,56,67,81,95,110,127);
 
 end rgbmatrix;

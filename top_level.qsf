@@ -134,10 +134,12 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_clk
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_cs
 set_location_assignment PIN_104 -to spi_dat
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to spi_dat
-set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/ledctrl_tb.vhd -section_id testbench
-set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/memory_tb.vhd -section_id testbench
-set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/testbench.vhd -section_id testbench
-set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/input_reg_tb.vhd -section_id testbench
+set_location_assignment PIN_110 -to dat_ncfg
+set_location_assignment PIN_73 -to led_frame_in
+set_location_assignment PIN_74 -to led_frame_out
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_frame_out
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_frame_in
+set_global_assignment -name VHDL_FILE vhdl/reset_generator.vhd
 set_global_assignment -name VHDL_FILE vhdl/delay_line.vhd
 set_global_assignment -name VHDL_FILE vhdl/config.vhd
 set_global_assignment -name VHDL_FILE vhdl/top_level.vhd
@@ -145,9 +147,10 @@ set_global_assignment -name VHDL_FILE vhdl/memory.vhd
 set_global_assignment -name VHDL_FILE vhdl/ledctrl.vhd
 set_global_assignment -name VHDL_FILE vhdl/input_reg.vhd
 set_global_assignment -name VHDL_FILE vhdl/clk_div.vhd
-set_location_assignment PIN_110 -to dat_ncfg
-set_location_assignment PIN_73 -to led_frame_in
-set_location_assignment PIN_74 -to led_frame_out
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_frame_out
-set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to led_frame_in
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/ledctrl_tb.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/memory_tb.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/testbench.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/input_reg_tb.vhd -section_id testbench
+set_global_assignment -name EDA_TEST_BENCH_FILE vhdl/testbenches/reset_generator_tb.vhd -section_id testbench
+set_location_assignment PIN_75 -to led_reset
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

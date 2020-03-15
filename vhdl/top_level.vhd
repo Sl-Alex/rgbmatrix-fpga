@@ -31,7 +31,6 @@ entity top_level is
     port (
         -- Clock and reset inputs
         clk_in  : in std_logic;
-        rst_n   : in std_logic;
         -- SPI inputs
         spi_cs  : in std_logic;
         spi_clk : in std_logic;
@@ -67,7 +66,8 @@ entity top_level is
         oe_copy      : out std_logic;
         -- Status LEDs
         led_frame_out : out std_logic;
-        led_frame_in  : out std_logic
+        led_frame_in  : out std_logic;
+        led_reset     : out std_logic
     );
 end top_level;
 
@@ -87,12 +87,8 @@ architecture str of top_level is
     signal cfg_valid : std_logic;
     signal status_frame : std_logic;
 begin
-    
-    -- Reset button is an "active low" input, invert it so we can treat is as
-    -- "active high", then OR it with the JTAG reset command output signal.
-    rst <= '0';
-    --rst_p <= not rst_n;
-    --rst <= rst_p or jtag_rst_out;
+
+    led_reset <= not rst;
     
     -- LED panel controller
     U_LEDCTRL : entity work.ledctrl
@@ -166,5 +162,16 @@ begin
             addr_rd => addr_rd,
             output  => data_outgoing
         );
-    
+
+    -- Instantiate the Unit Under Test (UUT)
+    U_RESET_GEN : entity work.reset_generator
+        generic map (
+            RST_DELAY => RESET_DELAY,
+            RST_LEN   => RESET_LEN
+        )
+        port map (
+            clk_in   => clk_in,
+            rst_out  => rst
+        );
+
 end str;
