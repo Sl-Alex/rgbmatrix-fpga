@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     initialize()
     while True:
-        files=glob('*.gif')+glob('*.png')+glob('*.jpg')
+        files=sorted(glob('*.gif')+glob('*.png')+glob('*.jpg'))
         for file in files:
             prepare_and_send(file)
             #time.sleep(0.05)
