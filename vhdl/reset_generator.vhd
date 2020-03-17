@@ -1,6 +1,6 @@
--- Simple SPI shift register for LED matrices based on FM6126A.
+-- Internal reset pulse generator
 -- 
--- Copyright (c) 2020 Oleksii Slabchenko <http://sl-alex.net>
+-- Copyright (c) 2020 Oleksii Slabchenko <https://sl-alex.net>
 -- This software is distributed under the terms of the MIT License shown below.
 -- 
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,11 +20,6 @@
 -- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 -- IN THE SOFTWARE.
-
--- For some great documentation on how the RGB LED panel works, see this page:
--- http://www.rayslogic.com/propeller/Programming/AdafruitRGB/AdafruitRGB.htm
--- or this page
--- http://www.ladyada.net/wiki/tutorials/products/rgbledmatrix/index.html#how_the_matrix_works
 
 library ieee;
 use ieee.std_logic_1164.all;

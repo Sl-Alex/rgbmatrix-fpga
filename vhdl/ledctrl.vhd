@@ -1,6 +1,7 @@
--- Adafruit RGB LED Matrix Display Driver
+-- RGB LED Matrix Display Driver for FM6126A-based panels
 -- Finite state machine to control the LED matrix hardware
 -- 
+-- Reworked by Oleksii Slabchenko <https://sl-alex.net>
 -- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>
 -- This software is distributed under the terms of the MIT License shown below.
 -- 
@@ -22,11 +23,6 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 -- IN THE SOFTWARE.
 
--- For some great documentation on how the RGB LED panel works, see this page:
--- http://www.rayslogic.com/propeller/Programming/AdafruitRGB/AdafruitRGB.htm
--- or this page
--- http://www.ladyada.net/wiki/tutorials/products/rgbledmatrix/index.html#how_the_matrix_works
-
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -35,6 +31,7 @@ use work.rgbmatrix.all;
 
 entity ledctrl is
     port (
+        -- Clock and reset inputs
         clk_in   : in  std_logic;
         rst      : in  std_logic;
         -- LED Panel IO
@@ -44,7 +41,7 @@ entity ledctrl is
         led_addr : out std_logic_vector(3 downto 0);
         lat      : out std_logic;
         oe       : out std_logic;
-        -- LED Panel IO
+        -- LED Panel IO (debug copy)
         clk_out_copy  : out std_logic;
         rgb1_copy     : out std_logic_vector(2 downto 0);
         rgb2_copy     : out std_logic_vector(2 downto 0);

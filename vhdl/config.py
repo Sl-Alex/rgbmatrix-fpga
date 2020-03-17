@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This script generates a linearization for proper color control.
-# LUT table shall be used like this:
+# LUT table shall be used for "OE" control like this:
 #
 #if (next_col < COLOR_LUT(to_integer(bpp_count))) then
 #    s_oe <= '0';
@@ -30,6 +30,11 @@ BPC = 4
 # Desired gamma
 GAMMA = 1.02
 
+# Here you should put your FTDI URL.
+# If you have an FTDI cable then probably you can use it in SPI mode.
+# You can leave it as it is, script will suggest you to select one of the available devices
+FTDI_URL = 'ftdi://ftdi:4232:FTYX7ASG/1'
+
 assert BPC <= 8, "BPC must be <= 8"
 assert BPC >  0, "BPC must be > 0"
 
@@ -56,9 +61,10 @@ def generate_config_vhd():
 
     print(lut_table)
 
-    file_text = '-- Adafruit RGB LED Matrix Display Driver\n'\
-    '-- User-editable configuration and constants package\n'\
+    file_text = '-- RGB LED Matrix Display Driver for FM6126A-based panels\n'\
+    '-- GENERATED AUTOMATICALLY by config.py script\n'\
     '-- \n'\
+    '-- Reworked by Oleksii Slabchenko <https://sl-alex.net>\n'\
     '-- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>\n'\
     '-- This software is distributed under the terms of the MIT License shown below.\n'\
     '-- \n'\
@@ -85,30 +91,27 @@ def generate_config_vhd():
     'use ieee.math_real.ceil;\n'\
     '\n'\
     'package rgbmatrix is\n'\
-    '    \n'\
-    '    -- User configurable constants\n'\
-    '    constant PIXEL_DEPTH  : integer := ' + str(BPC) + '; -- number of bits per pixel\n'\
-    '    constant FPGA_CLOCK   : integer := ' + str(FPGA_CLOCK) + '; -- FPGA clock frequency\n'\
-    '    constant LED_CLOCK    : integer := ' + str(LED_CLOCK) + '; -- LED panel clock frequency\n'\
-    '    constant RESET_DELAY  : integer := ' + str(RESET_DELAY) + '; -- reset pulse delay, clock pulses\n'\
-    '    constant RESET_LEN    : integer := ' + str(RESET_LEN) + '; -- reset pulse length, clock pulses\n'\
-    '    \n'\
-    '    -- Special constants (change these at your own risk, stuff might break!)\n'\
-    '    constant PANEL_WIDTH  : integer := ' + str(DISP_W) + '; -- width of the panel in pixels\n'\
-    '    constant PANEL_HEIGHT : integer := ' + str(DISP_H) + '; -- height of the panel in pixels\n'\
+    '\n'\
+    '    -- Main constants\n'\
+    '    constant PIXEL_DEPTH  : integer  := ' + str(BPC) +   ';        -- number of bits per pixel\n'\
+    '    constant FPGA_CLOCK   : integer  := ' + str(FPGA_CLOCK) +   '; -- FPGA clock frequency\n'\
+    '    constant LED_CLOCK    : integer  := ' + str(LED_CLOCK) +    '; -- LED panel clock frequency\n'\
+    '    constant RESET_DELAY  : integer  := ' + str(RESET_DELAY) +  '; -- reset pulse delay, clock pulses\n'\
+    '    constant RESET_LEN    : integer  := ' + str(RESET_LEN) +   ';  -- reset pulse length, clock pulses\n'\
+    '    constant PANEL_WIDTH  : integer  := ' + str(DISP_W) +  ';      -- width of the panel in pixels\n'\
+    '    constant PANEL_HEIGHT : integer  := ' + str(DISP_H) + ';       -- height of the panel in pixels\n'\
+    '    constant CONFIG_WIDTH : positive := 32;       -- two 16-bit registers\n'\
+    '    constant CFG1_PRELATCH: positive := 11;       -- Number of "LAT" pulses for CFG1 register write\n'\
+    '    constant CFG2_PRELATCH: positive := 12;       -- Number of "LAT" pulses for CFG2 register write\n'\
+    '\n'\
+    '    -- Derived constants, don\'t change\n'\
     '    constant DATA_WIDTH   : positive := PIXEL_DEPTH*6;\n'\
     '                                         -- one bit for each subpixel (3), times\n'\
     '                                         -- the number of simultaneous lines (2)\n'\
-    '    constant INPUT_WIDTH  : positive := ((DATA_WIDTH/2 +7)/8)*8;\n'\
-    '\n'\
-    '    constant CONFIG_WIDTH : positive := 32;\n'\
-    '    \n'\
-    '    -- Derived constants\n'\
+    '    constant INPUT_WIDTH    : positive := ((DATA_WIDTH/2 +7)/8)*8;\n'\
     '    constant ADDR_WIDTH     : positive := positive(log2(real(PANEL_WIDTH*PANEL_HEIGHT/2)));\n'\
     '    constant IMG_WIDTH      : positive := PANEL_WIDTH;\n'\
     '    constant IMG_WIDTH_LOG2 : positive := positive(log2(real(IMG_WIDTH)));\n'\
-    '    constant CFG1_PRELATCH  : positive := 11;\n'\
-    '    constant CFG2_PRELATCH  : positive := 12;\n'\
     '\n'\
     '    type color_lut_t is array (0 to 2**PIXEL_DEPTH-1) of integer;\n' + \
     lut_table + \

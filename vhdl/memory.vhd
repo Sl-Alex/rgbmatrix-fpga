@@ -1,6 +1,7 @@
--- Adafruit RGB LED Matrix Display Driver
+-- RGB LED Matrix Display Driver for FM6126A-based panels
 -- Special memory for the framebuffer with separate read/write clocks
 -- 
+-- Reworked by Oleksii Slabchenko <https://sl-alex.net> 
 -- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>
 -- This software is distributed under the terms of the MIT License shown below.
 -- 

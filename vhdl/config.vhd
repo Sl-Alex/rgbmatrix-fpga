@@ -1,6 +1,7 @@
--- Adafruit RGB LED Matrix Display Driver
--- User-editable configuration and constants package
+-- RGB LED Matrix Display Driver for FM6126A-based panels
+-- GENERATED AUTOMATICALLY by config.py script
 -- 
+-- Reworked by Oleksii Slabchenko <https://sl-alex.net>
 -- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>
 -- This software is distributed under the terms of the MIT License shown below.
 -- 
@@ -27,30 +28,27 @@ use ieee.math_real.log2;
 use ieee.math_real.ceil;
 
 package rgbmatrix is
-    
-    -- User configurable constants
-    constant PIXEL_DEPTH  : integer := 4; -- number of bits per pixel
-    constant FPGA_CLOCK   : integer := 50000000; -- FPGA clock frequency
-    constant LED_CLOCK    : integer := 12500000; -- LED panel clock frequency
-    constant RESET_DELAY  : integer := 50000000; -- reset pulse delay, clock pulses
-    constant RESET_LEN    : integer := 500000; -- reset pulse length, clock pulses
-    
-    -- Special constants (change these at your own risk, stuff might break!)
-    constant PANEL_WIDTH  : integer := 128; -- width of the panel in pixels
-    constant PANEL_HEIGHT : integer := 32; -- height of the panel in pixels
+
+    -- Main constants
+    constant PIXEL_DEPTH  : integer  := 4;        -- number of bits per pixel
+    constant FPGA_CLOCK   : integer  := 50000000; -- FPGA clock frequency
+    constant LED_CLOCK    : integer  := 12500000; -- LED panel clock frequency
+    constant RESET_DELAY  : integer  := 50000000; -- reset pulse delay, clock pulses
+    constant RESET_LEN    : integer  := 5000000;  -- reset pulse length, clock pulses
+    constant PANEL_WIDTH  : integer  := 128;      -- width of the panel in pixels
+    constant PANEL_HEIGHT : integer  := 32;       -- height of the panel in pixels
+    constant CONFIG_WIDTH : positive := 32;       -- two 16-bit registers
+    constant CFG1_PRELATCH: positive := 11;       -- Number of "LAT" pulses for CFG1 register write
+    constant CFG2_PRELATCH: positive := 12;       -- Number of "LAT" pulses for CFG2 register write
+
+    -- Derived constants, don't change
     constant DATA_WIDTH   : positive := PIXEL_DEPTH*6;
                                          -- one bit for each subpixel (3), times
                                          -- the number of simultaneous lines (2)
-    constant INPUT_WIDTH  : positive := ((DATA_WIDTH/2 +7)/8)*8;
-
-    constant CONFIG_WIDTH : positive := 32;
-    
-    -- Derived constants
+    constant INPUT_WIDTH    : positive := ((DATA_WIDTH/2 +7)/8)*8;
     constant ADDR_WIDTH     : positive := positive(log2(real(PANEL_WIDTH*PANEL_HEIGHT/2)));
     constant IMG_WIDTH      : positive := PANEL_WIDTH;
     constant IMG_WIDTH_LOG2 : positive := positive(log2(real(IMG_WIDTH)));
-    constant CFG1_PRELATCH  : positive := 11;
-    constant CFG2_PRELATCH  : positive := 12;
 
     type color_lut_t is array (0 to 2**PIXEL_DEPTH-1) of integer;
     constant COLOR_LUT: color_lut_t := (0,1,2,5,9,14,20,27,35,45,56,67,81,95,110,127);

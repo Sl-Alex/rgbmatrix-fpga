@@ -1,7 +1,8 @@
--- Adafruit RGB LED Matrix Display Driver
--- Finite state machine to control the LED matrix hardware
+-- RGB LED Matrix Display Driver for FM6126A-based panels
+-- Input shift register with address, data and latch output.
+-- Supports data and configuration modes.
 -- 
--- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>
+-- Copyright (c) 2020 Oleksii Slabchenko <https://sl-alex.net>
 -- This software is distributed under the terms of the MIT License shown below.
 -- 
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,11 +22,6 @@
 -- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 -- IN THE SOFTWARE.
-
--- For some great documentation on how the RGB LED panel works, see this page:
--- http://www.rayslogic.com/propeller/Programming/AdafruitRGB/AdafruitRGB.htm
--- or this page
--- http://www.ladyada.net/wiki/tutorials/products/rgbledmatrix/index.html#how_the_matrix_works
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -59,14 +55,12 @@ architecture bhv of input_reg is
     signal s_mode, next_mode : MODE_TYPE := MODE_DAT;
     
     -- State machine signals
-    -- TODO: define proper width of the bit counter
     signal s_bit_count, next_bit_count : unsigned(6 downto 0) := (others => '0');
     signal s_data, next_data: std_logic_vector(DATA_WIDTH/2-1 downto 0);
     signal s_cfg, next_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0);
     signal s_dat_lat, next_dat_lat : std_logic;
     signal s_cfg_lat, next_cfg_lat : std_logic;
     signal s_addr, next_addr : std_logic_vector(ADDR_WIDTH downto 0);
-
     signal s_dat_ncfg, s_spi_clk, s_spi_dat, s_spi_cs: std_logic;
     signal prev_dat_ncfg, prev_spi_clk: std_logic;
     signal s_frame, next_frame: std_logic;
@@ -115,7 +109,7 @@ begin
 
         next_frame <= s_frame;
 
-        -- Next latche state is low by default
+        -- Next latch state is low by default
         next_dat_lat <= s_dat_lat;
         next_cfg_lat <= s_cfg_lat;
 

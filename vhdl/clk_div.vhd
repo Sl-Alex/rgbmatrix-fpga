@@ -1,3 +1,4 @@
+-- RGB LED Matrix Display Driver for FM6126A-based panels
 -- Simple parameterized clock divider that uses a counter
 -- 
 -- Copyright (c) 2012 Brian Nezvadovitz <http://nezzen.net>

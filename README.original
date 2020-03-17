@@ -1,0 +1,39 @@
+################################################################
+#                                                              #
+#  Adafruit RGB LED Matrix Display Driver and Client Software  #
+#                                                              #
+################################################################
+
+This is a design that will enable use of the RGB LED matrix sold by Adafruit
+with an FPGA in order to achieve full-motion graphics across any number of
+panels in a variety of configurations. It is written in VHDL and is currently a
+work-in-progress.
+
+Also included in this project is client software that is used to send data to
+the circuit running on the FPGA. There are two parts to it. The first part is a
+Processing library that provides an easy way to send images to the device. The
+second part is a small Tcl server script that interfaces with a ByteBlaster
+(through the Altera Tcl API) and provides a vendor-specific JTAG wrapper over
+a TCP/IP socket.
+
+What's included:
+* contrib         Additional files not required for building the project
+  * photos        Photographs of the design and hardware in use
+  * tutorial      Tutorial on how to setup, build, and use the design
+* de0-nano        Files specific to the DE0-Nano FPGA dev board
+* processing      Client library with usage example
+* tcl             Server script to interface with the virtual JTAG
+* vhdl            VHDL source code for the design to use on the FPGA
+  * megawizard    Altera Megafunction IP code for the virtual JTAG
+  * testbenches   VHDL to use for simulation of selected entities
+
+Features implemented:
+* Read graphics data from RAM and display it on panel
+* Support multiple panels
+* Read video data from external device and fill into RAM
+* User configurable pixel depth (brightness control)
+
+Demo videos:
+* http://www.youtube.com/watch?v=DWirBxcCs2A
+* http://www.youtube.com/watch?v=or1Qpbdxw2o
+* http://www.youtube.com/watch?v=0Zrrlw3kZHA
