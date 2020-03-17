@@ -14,32 +14,11 @@ import startup
 startup.init()
 
 import config
+import spi_io
 
 # FTDI controller
-FTDI_URL = 'ftdi://ftdi:4232:FTYX7ASG/1'
 
-def initialize():
-    global spi
-    global gpio
-
-    # Configure controller with one CS
-    ctrl = SpiController(cs_count=1, turbo=True)
-
-    #ctrl.configure('ftdi:///?')  # Use this if you're not sure which device to use
-    # Windows users: make sure you've loaded libusb-win32 using Zadig
-    # TODO: Catch an exception and suggest what to do
-    ctrl.configure(FTDI_URL)
-
-    # Get SPI slave
-    # CS0, 10MHz, Mode 0 (CLK is low by default, latch on the rising edge)
-    spi = ctrl.get_port(cs=0, freq=10E6, mode=0)
-
-    # Get GPIO
-    gpio = ctrl.get_gpio()
-    gpio.set_direction(0x10, 0x10)
-
-
-def send_image():
+def send_test():
     global gpio
     global spi
 
@@ -63,21 +42,12 @@ def send_image():
                 write_buf[x*config.BPP + y*config.DISP_W*config.BPP + byte_nr] = \
                     (packed_word >> (8 * (config.BPP - 1 - byte_nr))) & 0xFF 
 
-    # Toggle dat_ncfg pin. This will force internal address counter to zero.
-    gpio.write(0x10)
-    time.sleep(0.010)
-    gpio.write(0x00)
-    time.sleep(0.010)
-    # Release dat_ncfg pin
-    gpio.write(0x10)
+    spi_io.send_array(write_buf)
 
-    # Synchronous exchange with the remote SPI slave
-    spi.exchange(write_buf, duplex=False)
 
 ###
 
-startup.init()
-initialize()
-send_image()
+spi_io.initialize()
+send_test()
 
 print('Done')

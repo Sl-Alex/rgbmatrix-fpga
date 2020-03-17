@@ -8,10 +8,10 @@ import startup
 startup.init()
 
 import config
-import image_transfer
+import spi_io
 
 import mss
-from PIL import Image
+from PIL import Image, ImageFilter
 
 monitor = -1
 if len(sys.argv) > 1:
@@ -69,19 +69,18 @@ print("capt_width = " + str(capt_width) + ", capt_height = " + str(capt_height))
 mon_cap = {
     "top": mon["top"] + capt_top,
     "left": mon["left"] + capt_left,
-    "width": capt_width,     # TODO: change
-    "height": capt_height,   # TODO: change
+    "width": capt_width,
+    "height": capt_height,
     "mon": monitor,
 }
 output = "sct-mon{mon}_{top}x{left}_{width}x{height}.png".format(**mon_cap)
 
+spi_io.initialize()
+
 tstart = time.time()
-tend=tstart+0.001
 cnt=0
 
-image_transfer.initialize()
-
-from PIL import ImageFilter
+print("Press Ctrl+C to stop")
 
 try:
     while True:
@@ -90,14 +89,12 @@ try:
         img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
         img = img.resize((config.DISP_W, config.DISP_H), Image.BICUBIC)
         img = img.filter(ImageFilter.SHARPEN)
-        image_transfer.send(img)
-        # img.save("sc.png")
+        # Send over SPI
+        spi_io.send_image(img)
         cnt += 1
-        # break;
-        tend = time.time();
-        # if (tend - tstart) > 10:
-        #    break
 except KeyboardInterrupt:
     pass
 
-print("average fps = " + str(cnt/(tend - tstart)))
+tend = time.time();
+if tstart != tend:
+    print("average fps = " + str(cnt/(tend - tstart)))
