@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 
-import os
-from shutil import copyfile
+import sys,os
 
 def init():
-    # Copy configuration script to this folder
-    if not os.path.exists("./config.py"):
-        copyfile("../vhdl/config.py", "./config.py")
-
-if __name__ == "__main__": 
-    init()
+    parentdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if parentdir not in sys.path:
+        sys.path.insert(0, parentdir)

@@ -12,8 +12,7 @@ import time
 from pyftdi.spi import SpiController
 import startup
 startup.init()
-
-import config
+from vhdl import config
 import spi_io
 
 # FTDI controller

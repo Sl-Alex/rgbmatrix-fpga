@@ -4,10 +4,8 @@ import time
 import sys
 from shutil import copyfile
 import startup
-
 startup.init()
-
-import config
+from vhdl import config
 import spi_io
 
 import mss

@@ -13,9 +13,8 @@ from pyftdi.spi import SpiController
 from PIL import Image
 from glob import glob
 import startup
-
 startup.init()
-import config
+from vhdl import config
 
 def initialize():
     global spi
@@ -87,8 +86,6 @@ def send_image(im):
 ###
 
 if __name__ == "__main__":
-    startup.init()
-
     initialize()
     while True:
         files = sorted(glob('*.gif') + glob('*.png') + glob('*.jpg'))
