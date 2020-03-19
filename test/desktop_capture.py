@@ -86,7 +86,6 @@ try:
         sct_img = sct.grab(mon_cap)
         img = Image.frombytes("RGB", sct_img.size, sct_img.bgra, "raw", "BGRX")
         img = img.resize((config.DISP_W, config.DISP_H), Image.BICUBIC)
-        img = img.filter(ImageFilter.SHARPEN)
         # Send over SPI
         spi_io.send_image(img)
         cnt += 1
