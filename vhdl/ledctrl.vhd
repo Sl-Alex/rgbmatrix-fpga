@@ -235,13 +235,13 @@ begin
                 next_ram_addr <= std_logic_vector( unsigned(s_ram_addr) + 1 );
                 next_state <= READ_PIXEL_DATA;
             when INCR_LED_ADDR =>
-                -- display is disabled during led_addr (select lines) update
+                next_state <= LATCH;
+                r1 := '0'; g1:= '0'; b1:= '0';
+                r2 := '0'; g2:= '0'; b2:= '0';
+            when LATCH =>
                 next_led_addr <= std_logic_vector( unsigned(s_led_addr) + 1 );
                 next_col_count <= (others => '0'); -- reset the column counter
                 prev_bpp_count <= next_bpp_count;
-                next_state <= LATCH;
-            when LATCH =>
-                -- display is disabled during latching
                 next_lat <= '1'; -- latch the data
                 r1 := '0'; g1:= '0'; b1:= '0';
                 r2 := '0'; g2:= '0'; b2:= '0';

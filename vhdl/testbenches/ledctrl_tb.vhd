@@ -54,7 +54,9 @@ begin
             lat      => lat,
             oe       => oe,
             addr     => addr,
-            data     => data
+            data     => data,
+            cfg      => "00000000000000000000000000000000",
+            cfg_lat  => '0'
         );
     
     -- Clock process
