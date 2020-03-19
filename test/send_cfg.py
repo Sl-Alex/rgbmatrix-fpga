@@ -2,8 +2,6 @@
 
 # Script updates FM6126A configuration registers.
 
-
-import time
 import startup
 startup.init()
 from vhdl import config

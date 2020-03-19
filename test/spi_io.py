@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-# Script outputs all images *.gif,*.png,*.jpg from its folder
-# with some delay. Image size should match the display size.
+# All function required for RGB panel IO.
 #
 # Requirements:
 # 1. PyFTDI, installation details see this link:
@@ -16,6 +15,7 @@ import startup
 startup.init()
 from vhdl import config
 
+# SPI HW initialization
 def initialize():
     global spi
     global gpio
@@ -43,8 +43,8 @@ def initialize():
     gpio = ctrl.get_gpio()
     gpio.set_direction(0x10, 0x10)
 
-
-def send_array(arr):
+# Send data to the display
+def send_data(arr):
     # Toggle dat_ncfg pin. This will force internal address counter to zero.
     gpio.write(0x10)
     time.sleep(0.010)
@@ -56,6 +56,7 @@ def send_array(arr):
     # Synchronous exchange with the remote SPI slave
     spi.exchange(arr, duplex=False)
 
+# Send configuration to the display
 def send_config(cfg):
     global gpio
     global spi
@@ -78,10 +79,12 @@ def send_config(cfg):
     # Synchronous exchange with the remote SPI slave
     spi.exchange(write_buf, duplex=False)
 
+# Send image to the display
 def send_image(im):
     global spi
     global gpio
     im = im.convert('RGB')
+    im = im.resize((config.DISP_W, config.DISP_H), Image.BICUBIC)
 
     # Create a buffer
     write_buf = bytearray(config.DISP_W * config.DISP_H * config.BPP)
@@ -101,8 +104,7 @@ def send_image(im):
                 write_buf[x * config.BPP + y * config.DISP_W * config.BPP + byte_nr] = \
                     (packed_word >> (8 * (config.BPP - 1 - byte_nr))) & 0xFF
 
-    send_array(write_buf)
-
+    send_data(write_buf)
 
 ###
 

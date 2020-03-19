@@ -9,7 +9,6 @@
 # 2. Pillow
 
 import time
-from pyftdi.spi import SpiController
 import startup
 startup.init()
 from vhdl import config
@@ -41,7 +40,7 @@ def send_test():
                 write_buf[x*config.BPP + y*config.DISP_W*config.BPP + byte_nr] = \
                     (packed_word >> (8 * (config.BPP - 1 - byte_nr))) & 0xFF 
 
-    spi_io.send_array(write_buf)
+    spi_io.send_data(write_buf)
 
 
 ###
