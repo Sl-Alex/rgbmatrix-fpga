@@ -73,7 +73,7 @@ architecture bhv of ledctrl is
     signal s_ram_addr, next_ram_addr : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal s_rgb1, next_rgb1, s_rgb2, next_rgb2 : std_logic_vector(2 downto 0);
     signal s_oe, s_lat, next_lat, s_clk_out, next_clk_out : std_logic;
-    signal s_cfg, next_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0);
+    signal s_cfg: std_logic_vector(CONFIG_WIDTH-1 downto 0) := "01110000000000000000000001000000";
     signal s_cfg_lat, s_prev_cfg_Lat: std_logic;
     signal s_frame, next_frame: std_logic;
 
@@ -165,11 +165,10 @@ begin
         r1 := '0'; g1 := '0'; b1 := '0'; -- Defaults
         r2 := '0'; g2 := '0'; b2 := '0'; -- Defaults
 
-        next_cfg <= s_cfg;
-        --c_cfg1 := s_cfg(CONFIG_WIDTH-1 downto CONFIG_WIDTH/2);
-        --c_cfg2 := s_cfg(CONFIG_WIDTH/2-1 downto 0);
-        c_cfg1 := "0111000000000000";
-        c_cfg2 := "0000000001000000";
+        c_cfg1 := s_cfg(CONFIG_WIDTH-1 downto CONFIG_WIDTH/2);
+        c_cfg2 := s_cfg(CONFIG_WIDTH/2-1 downto 0);
+        --c_cfg1 := "0111000000000000";
+        --c_cfg2 := "0000000001000000";
 
         -- Default register next-state assignments
         next_col_count <= col_count;

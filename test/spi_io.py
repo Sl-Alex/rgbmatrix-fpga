@@ -56,6 +56,27 @@ def send_array(arr):
     # Synchronous exchange with the remote SPI slave
     spi.exchange(arr, duplex=False)
 
+def send_config(cfg):
+    global gpio
+    global spi
+
+    # Create a buffer
+    write_buf = bytearray(4)
+    write_buf[0] = (cfg >> 24) & 0xFF;
+    write_buf[1] = (cfg >> 16) & 0xFF;
+    write_buf[2] = (cfg >> 8 ) & 0xFF;
+    write_buf[3] = cfg & 0xFF;
+
+    # Toggle dat_ncfg pin. This will force internal address counter to zero.
+    gpio.write(0x00)
+    time.sleep(0.010)
+    gpio.write(0x10)
+    time.sleep(0.010)
+    # Release dat_ncfg pin
+    gpio.write(0x00)
+
+    # Synchronous exchange with the remote SPI slave
+    spi.exchange(write_buf, duplex=False)
 
 def send_image(im):
     global spi
