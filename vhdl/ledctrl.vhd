@@ -185,25 +185,6 @@ begin
         s_oe <= '1'; -- this signal is "active low"
         next_frame <= s_frame;
 
-        if(upper_r > bpp_count) then
-            r1 := '1';
-        end if;
-        if(upper_g > bpp_count) then
-            g1 := '1';
-        end if;
-        if(upper_b > bpp_count) then
-            b1 := '1';
-        end if;
-        if(lower_r > bpp_count) then
-            r2 := '1';
-        end if;
-        if(lower_g > bpp_count) then
-            g2 := '1';
-        end if;
-        if(lower_b > bpp_count) then
-            b2 := '1';
-        end if;
-
         -- States
         case state is
             when INIT =>
@@ -228,22 +209,54 @@ begin
                 else
                     next_state <= INCR_LED_ADDR;
                 end if;
+                if(upper_r > bpp_count) then
+                    r1 := '1';
+                end if;
+                if(upper_g > bpp_count) then
+                    g1 := '1';
+                end if;
+                if(upper_b > bpp_count) then
+                    b1 := '1';
+                end if;
+                if(lower_r > bpp_count) then
+                    r2 := '1';
+                end if;
+                if(lower_g > bpp_count) then
+                    g2 := '1';
+                end if;
+                if(lower_b > bpp_count) then
+                    b2 := '1';
+                end if;
             when INCR_RAM_ADDR =>
                 s_oe <= linear_oe(col_count, prev_bpp_count);
                 next_clk_out <= '1'; -- pulse the output clock
                 next_ram_addr <= std_logic_vector( unsigned(s_ram_addr) + 1 );
                 next_state <= READ_PIXEL_DATA;
+                if(upper_r > bpp_count) then
+                    r1 := '1';
+                end if;
+                if(upper_g > bpp_count) then
+                    g1 := '1';
+                end if;
+                if(upper_b > bpp_count) then
+                    b1 := '1';
+                end if;
+                if(lower_r > bpp_count) then
+                    r2 := '1';
+                end if;
+                if(lower_g > bpp_count) then
+                    g2 := '1';
+                end if;
+                if(lower_b > bpp_count) then
+                    b2 := '1';
+                end if;
             when INCR_LED_ADDR =>
                 next_state <= LATCH;
-                r1 := '0'; g1:= '0'; b1:= '0';
-                r2 := '0'; g2:= '0'; b2:= '0';
             when LATCH =>
                 next_led_addr <= std_logic_vector( unsigned(s_led_addr) + 1 );
                 next_col_count <= (others => '0'); -- reset the column counter
                 prev_bpp_count <= next_bpp_count;
                 next_lat <= '1'; -- latch the data
-                r1 := '0'; g1:= '0'; b1:= '0';
-                r2 := '0'; g2:= '0'; b2:= '0';
                 next_state <= INIT; -- restart state machine
             when WRITE_CFG1 =>
                 next_clk_out <= '1'; -- pulse the output clock
@@ -314,12 +327,6 @@ begin
                 if(col_count >= (IMG_WIDTH - 2)) then -- check if at the rightmost side of the image
                 --    next_lat <= '1'; -- latch the data
                 end if;                next_clk_out <= '1'; -- pulse the output clock
-                r1 := '0';
-                g1 := '0';
-                b1 := '0';
-                r2 := '0';
-                g2 := '0';
-                b2 := '0';
                 if(col_count < IMG_WIDTH) then -- check if at the rightmost side of the image
                     next_state <= LATCH_EMPTY;
                     next_col_count <= col_count + 1; -- update/increment column counter
@@ -331,12 +338,6 @@ begin
                     next_lat <= '1'; -- latch the data
                 end if;
             when LATCH_EMPTY =>
-                r1 := '0';
-                g1 := '0';
-                b1 := '0';
-                r2 := '0';
-                g2 := '0';
-                b2 := '0';
                 --if(col_count >= (IMG_WIDTH - 2)) then -- check if at the rightmost side of the image
                 --    next_lat <= '1'; -- latch the data
                 --end if;

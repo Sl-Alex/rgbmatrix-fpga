@@ -30,8 +30,9 @@ use work.rgbmatrix.all; -- Constants & Configuration
 
 entity top_level is
     port (
-        -- Clock and reset inputs
+        -- Clock and reset
         clk_in  : in std_logic;
+        rst_out : out std_logic;
         -- SPI inputs
         spi_cs  : in std_logic;
         spi_clk : in std_logic;
@@ -90,6 +91,7 @@ architecture str of top_level is
 begin
 
     led_reset <= not rst;
+    rst_out   <= not rst;
     
     -- LED panel controller
     U_LEDCTRL : entity work.ledctrl
